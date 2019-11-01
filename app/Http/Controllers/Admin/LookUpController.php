@@ -177,10 +177,11 @@ class LookUpController extends ToolController
         }
         return $code;
     }
-    //生成验证码
+    //生成 验证码
     public function demo8(){
        echo $this->yzm(4);
     }
+
 
     public function demo9(){
         $handle = fopen('hongy.txt','r+');
