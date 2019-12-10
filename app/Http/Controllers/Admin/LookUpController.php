@@ -14,6 +14,71 @@ use App\Http\Models\LookUp;
 
 class LookUpController extends ToolController
 {
+    function curl_get_https($url){
+        $curl = curl_init(); // 启动一个CURL会话
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
+//        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, true);  // 从证书中检查SSL加密算法是否存在
+        $tmpInfo = curl_exec($curl);     //返回api的json对象
+        //关闭URL请求
+        curl_close($curl);
+        return $tmpInfo;    //返回json对象
+    }
+
+    // 查询是否刷单
+    public function  shuadan_sale($id){
+        //查询拍品ID
+        $url = 'https://api.weipaitang.com/wechat/v1.0/sale/mini-detail?saleUri='.$id;
+        $sale_data = $this->curl_get_https($url);//返回json
+        $sale_data = json_decode($sale_data,true);
+        if(count($sale_data['data']) < 4){
+            return $sale_data['data']['exception']['desc'];
+        }
+        $sale = $sale_data['data']['sale'];
+        $saleId = $sale['saleId'];
+        //金额未达标
+        if($sale['status'] == 'finished' and $sale['dealPrice'] <10){
+            return '金额未达标，用户支付金额'.$sale['dealPrice'];
+        }
+        //查询是否刷单
+        $url2 = "http://pro-ua.ai1.wpt.la/api/v1.1/bg/statistics/isScalp?saleId=".$saleId;
+        $shuadan_data = $this->curl_get_https($url2);//返回json
+        $shuadan_data = json_decode($shuadan_data,true);
+        $suspectType = $shuadan_data['data']['suspectType'];
+        switch ($suspectType){
+            case 0:
+                $txt = '0)正常订单';
+                break;
+            case 1:
+                $txt = '1)送货上门的订单';
+                break;
+            case 2:
+                $txt = '2)、买家收货信息里的电话与(卖 家认证电话或注册电话)相同的订单';
+                break;
+            case 3:
+                $txt = '3)、 物流的获取时间早于订单支付时间的订单';
+                break;
+            case 4:
+                $txt = '4)确认收货后，无物流信息的订单';
+                break;
+            case 5:
+                $txt = '5)、 物流显示的签收城市与买家订单里收货地址城市不符';
+                break;
+            case 6:
+                $txt = '6)、物流单号重复，且买卖家相同，且两重复的物流单号间隔<=30天;物流单号重复，且买卖家不同。';
+                break;
+            case 7:
+                $txt = '7).买家出价ip地址与卖家发货Ip地址相同';
+                break;
+        }
+        return $txt;
+    }
+
+
+
+
     const  NAME = '洪扬';
 
     public function  demo(){

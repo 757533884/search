@@ -171,6 +171,9 @@ Route::get('admin/look/nickname/{id}','Admin\LookUpController@nickname');
 //ocr
 Route::get('admin/look/ocr','Admin\LookUpController@ocr');
 
+//获取刷单接口
+Route::get('admin/look/shuadan_sale/{id}','Admin\LookUpController@shuadan_sale');
+
 /**
  * Redis测试
  */
